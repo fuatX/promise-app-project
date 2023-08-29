@@ -21,6 +21,9 @@
       .col-2 img:hover {
         cursor: pointer;
       }
+      #details {
+        opacity: 0;
+      }
 
       /* .col-2 img {
         height: 120px;
@@ -30,26 +33,41 @@
           height: 120px;
         }
       }
+      h1 {
+        display: flex;
+        justify-content: center;
+        color: brown;
+        margin-top: 5px;
+      }
     </style>
     <title>Document</title>
   </head>
   <body>
+    <h1>Search Country Name</h1>
     <div class="container my-5">
+      <div id="errors"></div>
       <div class="card mb-3">
         <div class="card-body">
           <div class="input-group">
             <input id="txtSearch" type="text" class="form-control" />
             <button id="btnSearch" type="button" class="btn btn-primary">
-              Yükle
+              Arat
             </button>
           </div>
         </div>
       </div>
-      <div class="card mb-3" id="country-details"></div>
-      <div class="card-mb-3">
-        <div class="card-header">Komşu Ülkeler</div>
-        <div class="card-body">
-          <div class="row" id="neighbors"></div>
+      <div id="details">
+        <div class="card mb-3">
+          <div class="card-header">Arama Sonucu</div>
+          <div class="card-body">
+            <div class="row" id="country-details"></div>
+          </div>
+        </div>
+        <div class="card-mb-3">
+          <div class="card-header">Komşu Ülkeler</div>
+          <div class="card-body">
+            <div class="row" id="neighbors"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -57,62 +75,41 @@
     <script>
       document.querySelector("#btnSearch").addEventListener("click", () => {
         let text = document.querySelector("#txtSearch").value;
+        document.querySelector("#details").style.opacity = 0;
         if (text.length >= 3) {
           getCountry(text);
         } else {
           //
-          alert("Lütfen gerçek bir ülke adı girin.");
+          const errorMessage = "ülke ismi 3 harfden az olamaz";
+          renderError(new Error(errorMessage));
         }
       });
 
       function getCountry(country) {
         fetch("https://restcountries.com/v3.1/name/" + country)
-          .then((response) => response.json())
+          .then((response) => {
+            if (!response.ok) throw new Error("ülke bulunamadı.");
+            return response.json();
+          })
           .then((data) => {
             renderCountry(data[0]);
-            const countries = data[0].borders.toString();
+            const countries = data[0].borders;
 
+            if (!countries) throw new Error("komşu ülke bulunamadı");
             return fetch(
-              "https://restcountries.com/v3.1/alpha?codes=" + countries
+              "https://restcountries.com/v3.1/alpha?codes=" +
+                countries.toString()
             );
           })
           .then((response) => response.json())
-          .then((data) => renderNeighbor(data));
-        // const request = new XMLHttpRequest();
-
-        // request.open("GET", "https://restcountries.com/v3.1/name/" + country);
-        // request.send();
-
-        // // async
-
-        // request.addEventListener("load", function () {
-        //   const data = JSON.parse(this.responseText);
-        //   //  console.log(data);
-        //   renderCountry(data[0]);
-
-        //   const countries = data[0].borders.toString();
-
-        //   //load neighbor
-        //   const req = new XMLHttpRequest();
-        //   req.open(
-        //     "GET",
-        //     "https://restcountries.com/v3.1/alpha?codes=" + countries
-        //   );
-        //   req.send();
-
-        //   req.addEventListener("load", function () {
-        //     const data = JSON.parse(this.responseText);
-        //     renderNeighbor(data);
-        //   });
-        // });
+          .then((data) => renderNeighbor(data))
+          .catch((err) => renderError(err));
       }
 
       function renderCountry(data) {
-        let html = ` <div class="card-header">
-                Arama Sonucu
-            </div>
-            <div class="card-body">
-                <div class="row">
+        document.querySelector("#country-details").innerHTML = "";
+        document.querySelector("#neighbors").innerHTML = "";
+        let html = ` 
                     <div class="col-4">
                         <img src="${data.flags.png}" class="img-fluid" alt="">
                     </div>
@@ -146,10 +143,9 @@
                         </div>
 
                     </div>
-                </div>
-            </div>
+            
             `;
-
+        document.querySelector("#details").style.opacity = 1;
         document.querySelector("#country-details").innerHTML = html;
       }
 
@@ -188,6 +184,26 @@
         document.querySelector("#txtSearch").value = countryName;
         getCountry(countryName); // Arama işlemini tetikle
       }
+      function renderError(err) {
+        const html = `<div class="alert alert-danger">
+            ${err.message}
+            </div>`;
+        setTimeout(function () {
+          document.querySelector("#errors").innerHTML = "";
+        }, 1500);
+        document.querySelector("#errors").innerHTML = html;
+      }
+
+      function enterClick(event) {
+        let key = event.key;
+        if (key === "Enter") {
+          document.querySelector("#btnSearch").click();
+        }
+      }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        document.addEventListener("keydown", enterClick);
+      });
     </script>
   </body>
 </html>
