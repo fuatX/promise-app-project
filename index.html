@@ -29,7 +29,6 @@
         .col-2 img {
           height: 120px;
         }
-       
       }
     </style>
     <title>Document</title>
@@ -46,34 +45,7 @@
           </div>
         </div>
       </div>
-      <div class="card mb-3" id="country-details">
-        <!-- <div class="card-header">
-                Arama Sonucu
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-4">
-                        <img src="tr.png" class="img-fluid" alt="">
-                    </div>
-                    <div class="col-8">
-                        <h3 class="card-title">Türkiye</h3>
-                        <hr>
-                        <div class="row">
-                            <div class="col-4">Nüfus: </div>
-                            <div class="col-8">84.5 milyon</div>
-                        </div>
-                        <div class="row">
-                            <div class="col-4">Resmi Dil: </div>
-                            <div class="col-8">Türkçe</div>
-                        </div>
-                        <div class="row">
-                            <div class="col-4">Başkent: </div>
-                            <div class="col-8">Ankara</div>
-                        </div>
-                    </div>
-                </div>
-            </div> -->
-      </div>
+      <div class="card mb-3" id="country-details"></div>
       <div class="card-mb-3">
         <div class="card-header">Komşu Ülkeler</div>
         <div class="card-body">
@@ -94,33 +66,45 @@
       });
 
       function getCountry(country) {
-        const request = new XMLHttpRequest();
+        fetch("https://restcountries.com/v3.1/name/" + country)
+          .then((response) => response.json())
+          .then((data) => {
+            renderCountry(data[0]);
+            const countries = data[0].borders.toString();
 
-        request.open("GET", "https://restcountries.com/v3.1/name/" + country);
-        request.send();
+            return fetch(
+              "https://restcountries.com/v3.1/alpha?codes=" + countries
+            );
+          })
+          .then((response) => response.json())
+          .then((data) => renderNeighbor(data));
+        // const request = new XMLHttpRequest();
 
-        // async
+        // request.open("GET", "https://restcountries.com/v3.1/name/" + country);
+        // request.send();
 
-        request.addEventListener("load", function () {
-          const data = JSON.parse(this.responseText);
-          //  console.log(data);
-          renderCountry(data[0]);
+        // // async
 
-          const countries = data[0].borders.toString();
+        // request.addEventListener("load", function () {
+        //   const data = JSON.parse(this.responseText);
+        //   //  console.log(data);
+        //   renderCountry(data[0]);
 
-          //load neighbor
-          const req = new XMLHttpRequest();
-          req.open(
-            "GET",
-            "https://restcountries.com/v3.1/alpha?codes=" + countries
-          );
-          req.send();
+        //   const countries = data[0].borders.toString();
 
-          req.addEventListener("load", function () {
-            const data = JSON.parse(this.responseText);
-            renderNeighbor(data);
-          });
-        });
+        //   //load neighbor
+        //   const req = new XMLHttpRequest();
+        //   req.open(
+        //     "GET",
+        //     "https://restcountries.com/v3.1/alpha?codes=" + countries
+        //   );
+        //   req.send();
+
+        //   req.addEventListener("load", function () {
+        //     const data = JSON.parse(this.responseText);
+        //     renderNeighbor(data);
+        //   });
+        // });
       }
 
       function renderCountry(data) {
@@ -155,12 +139,12 @@
                             <div class="col-4 h6">Para Birimi: </div>
                             <div class="col-8 h6">${
                               Object.values(data.currencies)[0].name
-                            }  
+                            }
                                 (${
                                   Object.values(data.currencies)[0].symbol
                                 }</div>
                         </div>
-                       
+
                     </div>
                 </div>
             </div>
@@ -168,21 +152,7 @@
 
         document.querySelector("#country-details").innerHTML = html;
       }
-      //   function renderNeighbor(data) {
-      //     let html = "";
-      //     for (let country of data) {
-      //       html +=
-      //             `<div class="col-2 mt-2">
-      //             <div class="card-img-top ">
-      //               <img src="${country.flags.png}" class="card-img-top bg-dark">
-      //               <div class="card-body">
-      //                 <h6 class="card-title">${country.name.common}</h6>
-      //               </div>
-      //             </div>
-      //           </div>`;
-      //     }
-      //     document.querySelector("#neighbors").innerHTML = html;
-      //   }
+
       function renderNeighbor(data) {
         let html = "";
 
